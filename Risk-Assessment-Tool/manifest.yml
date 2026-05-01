@@ -1,0 +1,21 @@
+modules:
+  jira:issuePanel:
+    - key: risk-assessment-tool-hello-world-issue-panel
+      resource: main
+      resolver:
+        function: resolver
+      render: native
+      title: Risk Assessment Tool
+      icon: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: main
+    path: src/frontend/index.jsx
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/c58e3a6d-8bdd-4fbf-8df9-d7fb9f3822bf

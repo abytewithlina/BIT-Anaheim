@@ -16,6 +16,9 @@ resources:
 permissions:
   scopes:
     - storage:app
+    - read:jira-user
+    - read:jira-work
+    - write:jira-work
 app:
   runtime:
     name: nodejs24.x

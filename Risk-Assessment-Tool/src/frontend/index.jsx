@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ForgeReconciler, {
   Text,
   Heading,
@@ -8,12 +8,39 @@ import ForgeReconciler, {
   SectionMessage,
   Box
 } from '@forge/react';
+import { invoke } from '@forge/bridge';
 
 // Main app component
 const App = () => {
   // 'risk' holds the current value (Low, Medium, or High)
-  // 'setRisk' is the function we call to update that value
+  // 'setRisk' is the function we call to update that value    
   const [risk, setRisk] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // Tracks whether backend data is still being fetched
+
+  useEffect(() => {
+    // Runs once when the component mounts (empty dependency array)
+
+    invoke('getRisk')
+      .then((data) => {
+        // Converts backend response into a display-safe string if it's an object
+        const cleanData = typeof data === 'object' ? JSON.stringify(data) : data;
+
+        setRisk(cleanData); // Initializes UI state from backend value
+        setIsLoading(false); // Stops loading state once data is received
+      })
+      .catch(() => setIsLoading(false)); // Ensures UI doesn't stay stuck if request fails
+  }, []);
+
+  const handleUpdate = async (selectedRisk) => {
+    // Immediately updates UI before backend call completes (optimistic update)
+    setRisk(selectedRisk);
+
+    // Persists selected risk value to Forge backend resolver
+    await invoke('saveRisk', { riskValue: selectedRisk });
+  };
+
+  // Prevents UI from rendering before data is ready
+  if (isLoading) return <Text>Loading...</Text>;
 
   return (
     // Stack lays out elements vertically with consistent spacing
@@ -28,8 +55,8 @@ const App = () => {
       {/* ButtonGroup aligns the buttons horizontally */}
       <ButtonGroup>
         <Button
-          // Updates state to "Low" when clicked
-          onClick={() => setRisk('Low')}
+          // Updates state to "Low" when clicked        
+          onClick={() => handleUpdate('Low')}
           // Highlights button if it is the selected value
           appearance={risk === 'Low' ? 'primary' : 'default'}
         >
@@ -38,7 +65,7 @@ const App = () => {
 
         <Button
           // Updates state to "Medium" when clicked
-          onClick={() => setRisk('Medium')}
+          onClick={() => handleUpdate('Medium')}
           // Highlights button if it is the selected value
           appearance={risk === 'Medium' ? 'warning' : 'default'}
         >
@@ -47,7 +74,7 @@ const App = () => {
 
         <Button
           // Updates state to "High" when clicked
-          onClick={() => setRisk('High')}
+          onClick={() => handleUpdate('High')}
           // Highlights button if it is the selected value
           appearance={risk === 'High' ? 'danger' : 'default'}
         >
@@ -55,7 +82,7 @@ const App = () => {
         </Button>
       </ButtonGroup>
 
-      {/* Show a message based on the selected risk */}
+      {/* Conditional rendering: shows different messages based on selected risk */}
       {risk === 'Low' && (
         <SectionMessage title="Low Risk" appearance="success">
           <Text>Standard monitoring required. No immediate action needed.</Text>
